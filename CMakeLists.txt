@@ -8,6 +8,10 @@ add_executable(TinyLang Main.c)
 
 enable_testing()
 
-add_test(Test01 TinyLang)
-set_tests_properties(Test01 PROPERTIES
-        PASS_REGULAR_EXPRESSION "TinyLang")
+function(do_test name result)
+    add_test(${name} TinyLang "${CMAKE_SOURCE_DIR}/tests/${name}.tl")
+    set_tests_properties(${name} PROPERTIES PASS_REGULAR_EXPRESSION ${result})
+endfunction(do_test)
+
+do_test(test01 "11\n$")
+do_test(test02 "190\n$")
