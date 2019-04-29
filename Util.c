@@ -27,7 +27,9 @@ char *readConsoleUntilEnterTwice(void)
     StringBuffer *buffer = createStringBuffer();
     int prevCh = '\0';
     int ch = getchar();
-    if (ch == EOF) return NULL;
+    if (ch == EOF) {
+        return NULL;
+    }
     while (ch != EOF && !(ch == '\n' && prevCh == '\n')) {
         stringBufferAddChar(buffer, ch);
         prevCh = ch;

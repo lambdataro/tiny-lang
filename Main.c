@@ -3,14 +3,15 @@
 #include <ctype.h>
 #include "Stream.h"
 #include "Util.h"
+#include "Lexing.h"
 
 static void runFile(const char *filename);
 static void runRepl(void);
-static void skipSpace(Stream *stream);
-static int expr(Stream *stream);
-static int term(Stream *stream);
-static int factor(Stream *stream);
-static int readNextNum(Stream *stream);
+static void startParse(Stream *stream);
+static int parseExpr(LexingState *state);
+static int parseAddExpr(LexingState *state);
+static int parseMulExpr(LexingState *state);
+static int parseSimpleExpr(LexingState *state);
 
 int main(int argc, char *argv[])
 {
@@ -36,8 +37,7 @@ static void runFile(const char *filename)
         fprintf(stderr, "failed to open file: \"%s\"\n", filename);
         exit(EXIT_FAILURE);
     }
-    int result = expr(stream);
-    printf("%d\n", result);
+    startParse(stream);
     destroyStream(stream);
 }
 
@@ -53,32 +53,40 @@ static void runRepl(void)
         }
         Stream *stream = createStringStream(str);
         free(str);
-
-        int result = expr(stream);
-        printf("%d\n\n", result);
-
+        startParse(stream);
         destroyStream(stream);
     }
 }
 
-static void skipSpace(Stream *stream)
+static void startParse(Stream *stream)
 {
-    while (isspace(stream->ch)) nextChar(stream);
+    LexingState *state = createLexingState(stream);
+    nextToken(state);
+    int result = parseExpr(state);
+    if (state->token->type != TOKEN_EOF) {
+        printf("syntax error\n");
+    }
+    printf("%d\n", result);
+    destroyLexingState(state);
 }
 
-static int expr(Stream *stream)
+static int parseExpr(LexingState *state)
 {
-    int lhs = term(stream);
+    return parseAddExpr(state);
+}
+
+static int parseAddExpr(LexingState *state)
+{
+    int lhs = parseMulExpr(state);
     for (;;) {
-        skipSpace(stream);
-        if (stream->ch == '+') {
-            nextChar(stream);
-            lhs += term(stream);
+        if (state->token->type == TOKEN_PLUS) {
+            nextToken(state);
+            lhs += parseMulExpr(state);
             continue;
         }
-        if (stream->ch == '-') {
-            nextChar(stream);
-            lhs -= term(stream);
+        if (state->token->type == TOKEN_MINUS) {
+            nextToken(state);
+            lhs -= parseMulExpr(state);
             continue;
         }
         break;
@@ -86,19 +94,18 @@ static int expr(Stream *stream)
     return lhs;
 }
 
-static int term(Stream *stream)
+static int parseMulExpr(LexingState *state)
 {
-    int lhs = factor(stream);
+    int lhs = parseSimpleExpr(state);
     for (;;) {
-        skipSpace(stream);
-        if (stream->ch == '*') {
-            nextChar(stream);
-            lhs *= factor(stream);
+        if (state->token->type == TOKEN_ASTERISK) {
+            nextToken(state);
+            lhs *= parseSimpleExpr(state);
             continue;
         }
-        if (stream->ch == '/') {
-            nextChar(stream);
-            lhs /= factor(stream);
+        if (state->token->type == TOKEN_SLASH) {
+            nextToken(state);
+            lhs /= parseSimpleExpr(state);
             continue;
         }
         break;
@@ -106,33 +113,23 @@ static int term(Stream *stream)
     return lhs;
 }
 
-static int factor(Stream *stream)
+static int parseSimpleExpr(LexingState *state)
 {
-    skipSpace(stream);
-    if (isdigit(stream->ch)) {
-        return readNextNum(stream);
+    if (state->token->type == TOKEN_INT) {
+        int value = state->token->intVal;
+        nextToken(state);
+        return value;
     }
-    if (stream->ch == '(') {
-        nextChar(stream);
-        int result = expr(stream);
-        skipSpace(stream);
-        if (stream->ch != ')') {
+    if (state->token->type == TOKEN_LEFT_PAREN) {
+        nextToken(state);
+        int value = parseExpr(state);
+        if (state->token->type != TOKEN_RIGHT_PAREN) {
             printf("syntax error\n");
-            exit(EXIT_FAILURE);
+            return 0;
         }
-        nextChar(stream);
-        return result;
+        nextToken(state);
+        return value;
     }
     printf("syntax error\n");
-    exit(EXIT_FAILURE);
-}
-
-static int readNextNum(Stream *stream)
-{
-    int num = 0;
-    while (isdigit(stream->ch)) {
-        num = num * 10 + (stream->ch - '0');
-        nextChar(stream);
-    }
-    return num;
+    return 0;
 }

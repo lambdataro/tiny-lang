@@ -4,8 +4,8 @@
 #include "Util.h"
 
 static Stream *createStream(StreamType type);
-static int fileStreamNextChar(Stream *stream);
-static int stringStreamNextChar(Stream *stream);
+static int fileStreamGetChar(Stream *stream);
+static int stringStreamGetChar(Stream *stream);
 
 Stream *createFileStream(const char *filename)
 {
@@ -15,7 +15,6 @@ Stream *createFileStream(const char *filename)
         destroyStream(stream);
         return NULL;
     }
-    nextChar(stream);
     return stream;
 }
 
@@ -25,7 +24,6 @@ Stream *createStringStream(const char *str)
     stream->str.buffer = allocAndCopyString(str);
     stream->str.length = strlen(stream->str.buffer);
     stream->str.index = 0;
-    nextChar(stream);
     return stream;
 }
 
@@ -47,30 +45,28 @@ void destroyStream(Stream *stream)
     free(stream);
 }
 
-int nextChar(Stream *stream)
+int getChar(Stream *stream)
 {
     switch (stream->type) {
     case STREAM_FILE:
-        return fileStreamNextChar(stream);
+        return fileStreamGetChar(stream);
     case STREAM_STRING:
-        return stringStreamNextChar(stream);
+        return stringStreamGetChar(stream);
     default:
         fprintf(stderr, "unknown stream type\n");
         exit(EXIT_FAILURE);
     }
 }
 
-static int fileStreamNextChar(Stream *stream)
+static int fileStreamGetChar(Stream *stream)
 {
-    stream->ch = fgetc(stream->fp);
-    return stream->ch;
+    return fgetc(stream->fp);
 }
 
-static int stringStreamNextChar(Stream *stream)
+static int stringStreamGetChar(Stream *stream)
 {
     if (stream->str.index >= stream->str.length) {
-        return stream->ch = EOF;
+        return EOF;
     }
-    stream->ch = stream->str.buffer[stream->str.index++];
-    return stream->ch;
+    return stream->str.buffer[stream->str.index++];
 }

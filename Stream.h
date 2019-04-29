@@ -18,12 +18,11 @@ typedef struct {
             size_t index;
         } str;
     };
-    int ch; // 先読み文字
 } Stream;
 
 Stream *createFileStream(const char *filename);
 Stream *createStringStream(const char *str);
 void destroyStream(Stream *stream);
-int nextChar(Stream *stream);
+int getChar(Stream *stream);
 
 #endif // TINY_LANG_STREAM_H_INCLUDED
