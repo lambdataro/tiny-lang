@@ -4,18 +4,25 @@
 #include <stdio.h>
 
 typedef enum {
-    STREAM_FILE
+    STREAM_FILE,
+    STREAM_STRING
 } StreamType;
 
 typedef struct {
     StreamType type;
     union {
         FILE *fp;
+        struct {
+            char *buffer;
+            size_t length;
+            size_t index;
+        } str;
     };
     int ch; // 先読み文字
 } Stream;
 
 Stream *createFileStream(const char *filename);
+Stream *createStringStream(const char *str);
 void destroyStream(Stream *stream);
 int nextChar(Stream *stream);
 

@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "Stream.h"
+#include "Util.h"
 
 static void runFile(const char *filename);
+static void runRepl(void);
 static void skipSpace(Stream *stream);
 static int expr(Stream *stream);
 static int term(Stream *stream);
@@ -12,10 +14,14 @@ static int readNextNum(Stream *stream);
 
 int main(int argc, char *argv[])
 {
-    printf("TinyLang\n");
-
     if (argc == 2) {
         runFile(argv[1]);
+        return EXIT_SUCCESS;
+    }
+
+    if (argc == 1) {
+        printf("TinyLang\n");
+        runRepl();
         return EXIT_SUCCESS;
     }
 
@@ -33,6 +39,26 @@ static void runFile(const char *filename)
     int result = expr(stream);
     printf("%d\n", result);
     destroyStream(stream);
+}
+
+static void runRepl(void)
+{
+    for (;;) {
+        printf("> ");
+        fflush(stdout);
+        char *str = readConsoleUntilEnterTwice();
+        if (!str) {
+            free(str);
+            break;
+        }
+        Stream *stream = createStringStream(str);
+        free(str);
+
+        int result = expr(stream);
+        printf("%d\n\n", result);
+
+        destroyStream(stream);
+    }
 }
 
 static void skipSpace(Stream *stream)
