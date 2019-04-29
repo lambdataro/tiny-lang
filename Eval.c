@@ -19,7 +19,7 @@ static Value *eval(Ast *ast)
     }
 
     if (isBinaryOpAst(ast)) {
-        int lhs = eval(ast->lhs);
+        Value *lhs = eval(ast->lhs);
         if (isErrorValue(lhs)) {
             return lhs;
         }
@@ -30,6 +30,8 @@ static Value *eval(Ast *ast)
         }
         return calc_binary(ast->type, lhs, rhs);
     }
+
+    return createErrorValue("runtime error");
 }
 
 static Value *calc_binary(AstType type, Value *lhs, Value *rhs)
