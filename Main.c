@@ -1,17 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "Stream.h"
 #include "Util.h"
 #include "Lexing.h"
+#include "Parsing.h"
+#include "Eval.h"
 
 static void runFile(const char *filename);
 static void runRepl(void);
-static void startParse(Stream *stream);
-static int parseExpr(LexingState *state);
-static int parseAddExpr(LexingState *state);
-static int parseMulExpr(LexingState *state);
-static int parseSimpleExpr(LexingState *state);
+static void parseAndRunCode(Stream *stream);
 
 int main(int argc, char *argv[])
 {
@@ -37,13 +36,13 @@ static void runFile(const char *filename)
         fprintf(stderr, "failed to open file: \"%s\"\n", filename);
         exit(EXIT_FAILURE);
     }
-    startParse(stream);
+    parseAndRunCode(stream);
     destroyStream(stream);
 }
 
 static void runRepl(void)
 {
-    for (;;) {
+    while (true) {
         printf("> ");
         fflush(stdout);
         char *str = readConsoleUntilEnterTwice();
@@ -53,83 +52,25 @@ static void runRepl(void)
         }
         Stream *stream = createStringStream(str);
         free(str);
-        startParse(stream);
+        parseAndRunCode(stream);
         destroyStream(stream);
     }
 }
 
-static void startParse(Stream *stream)
+static void parseAndRunCode(Stream *stream)
 {
     LexingState *state = createLexingState(stream);
-    nextToken(state);
-    int result = parseExpr(state);
-    if (state->token->type != TOKEN_EOF) {
-        printf("syntax error\n");
+    Ast *ast = startParse(state);
+    fprintAst(stdout, ast, 0);
+    fprintf(stdout, "\n\n");
+
+    if (ast->type!=AST_ERROR) {
+        Value *value = startEval(ast);
+        fprintValue(stdout, value);
+        fprintf(stdout, "\n");
+        destroyValue(value);
     }
-    printf("%d\n", result);
+
+    destroyAst(ast);
     destroyLexingState(state);
-}
-
-static int parseExpr(LexingState *state)
-{
-    return parseAddExpr(state);
-}
-
-static int parseAddExpr(LexingState *state)
-{
-    int lhs = parseMulExpr(state);
-    for (;;) {
-        if (state->token->type == TOKEN_PLUS) {
-            nextToken(state);
-            lhs += parseMulExpr(state);
-            continue;
-        }
-        if (state->token->type == TOKEN_MINUS) {
-            nextToken(state);
-            lhs -= parseMulExpr(state);
-            continue;
-        }
-        break;
-    }
-    return lhs;
-}
-
-static int parseMulExpr(LexingState *state)
-{
-    int lhs = parseSimpleExpr(state);
-    for (;;) {
-        if (state->token->type == TOKEN_ASTERISK) {
-            nextToken(state);
-            lhs *= parseSimpleExpr(state);
-            continue;
-        }
-        if (state->token->type == TOKEN_SLASH) {
-            nextToken(state);
-            lhs /= parseSimpleExpr(state);
-            continue;
-        }
-        break;
-    }
-    return lhs;
-}
-
-static int parseSimpleExpr(LexingState *state)
-{
-    if (state->token->type == TOKEN_INT) {
-        int value = state->token->intVal;
-        nextToken(state);
-        return value;
-    }
-    if (state->token->type == TOKEN_LEFT_PAREN) {
-        nextToken(state);
-        int value = parseExpr(state);
-        if (state->token->type != TOKEN_RIGHT_PAREN) {
-            printf("syntax error\n");
-            return 0;
-        }
-        nextToken(state);
-        return value;
-    }
-    printf("syntax error\n");
-    return 0;
 }
