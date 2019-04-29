@@ -1,0 +1,22 @@
+#ifndef TINY_LANG_STREAM_H_INCLUDED
+#define TINY_LANG_STREAM_H_INCLUDED
+
+#include <stdio.h>
+
+typedef enum {
+    STREAM_FILE
+} StreamType;
+
+typedef struct {
+    StreamType type;
+    union {
+        FILE *fp;
+    };
+    int ch; // 先読み文字
+} Stream;
+
+Stream *createFileStream(const char *filename);
+void destroyStream(Stream *stream);
+int nextChar(Stream *stream);
+
+#endif // TINY_LANG_STREAM_H_INCLUDED

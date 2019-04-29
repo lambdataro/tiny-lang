@@ -1,20 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-
-typedef struct {
-    FILE *file;
-    int ch;
-} LexingState;
+#include "Stream.h"
 
 static void runFile(const char *filename);
-static void runConsole(void);
-static void nextChar(LexingState *state);
-static void skipSpace(LexingState *state);
-static int expr(LexingState *state);
-static int term(LexingState *state);
-static int factor(LexingState *state);
-static int readNextNum(LexingState *state);
+static void skipSpace(Stream *stream);
+static int expr(Stream *stream);
+static int term(Stream *stream);
+static int factor(Stream *stream);
+static int readNextNum(Stream *stream);
 
 int main(int argc, char *argv[])
 {
@@ -25,66 +19,40 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    if (argc == 1) {
-        runConsole();
-        return EXIT_SUCCESS;
-    }
-
     fprintf(stderr, "Usage: TinyLang [filename]\n");
     return EXIT_FAILURE;
 }
 
 static void runFile(const char *filename)
 {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
+    Stream *stream = createFileStream(filename);
+    if (!stream) {
         fprintf(stderr, "failed to open file: \"%s\"\n", filename);
         exit(EXIT_FAILURE);
     }
-
-    LexingState state;
-    state.file = file;
-    nextChar(&state);
-
-    int result = expr(&state);
+    int result = expr(stream);
     printf("%d\n", result);
-
-    fclose(file);
+    destroyStream(stream);
 }
 
-static void runConsole(void)
+static void skipSpace(Stream *stream)
 {
-    LexingState state;
-    state.file = stdin;
-    nextChar(&state);
-
-    int result = expr(&state);
-    printf("%d\n", result);
+    while (isspace(stream->ch)) nextChar(stream);
 }
 
-static void nextChar(LexingState *state)
+static int expr(Stream *stream)
 {
-    state->ch = fgetc(state->file);
-}
-
-static void skipSpace(LexingState *state)
-{
-    while (isspace(state->ch)) nextChar(state);
-}
-
-static int expr(LexingState *state)
-{
-    int lhs = term(state);
+    int lhs = term(stream);
     for (;;) {
-        skipSpace(state);
-        if (state->ch == '+') {
-            nextChar(state);
-            lhs += term(state);
+        skipSpace(stream);
+        if (stream->ch == '+') {
+            nextChar(stream);
+            lhs += term(stream);
             continue;
         }
-        if (state->ch == '-') {
-            nextChar(state);
-            lhs -= term(state);
+        if (stream->ch == '-') {
+            nextChar(stream);
+            lhs -= term(stream);
             continue;
         }
         break;
@@ -92,19 +60,19 @@ static int expr(LexingState *state)
     return lhs;
 }
 
-static int term(LexingState *state)
+static int term(Stream *stream)
 {
-    int lhs = factor(state);
+    int lhs = factor(stream);
     for (;;) {
-        skipSpace(state);
-        if (state->ch == '*') {
-            nextChar(state);
-            lhs *= factor(state);
+        skipSpace(stream);
+        if (stream->ch == '*') {
+            nextChar(stream);
+            lhs *= factor(stream);
             continue;
         }
-        if (state->ch == '/') {
-            nextChar(state);
-            lhs /= factor(state);
+        if (stream->ch == '/') {
+            nextChar(stream);
+            lhs /= factor(stream);
             continue;
         }
         break;
@@ -112,33 +80,33 @@ static int term(LexingState *state)
     return lhs;
 }
 
-static int factor(LexingState *state)
+static int factor(Stream *stream)
 {
-    skipSpace(state);
-    if (isdigit(state->ch)) {
-        return readNextNum(state);
+    skipSpace(stream);
+    if (isdigit(stream->ch)) {
+        return readNextNum(stream);
     }
-    if (state->ch == '(') {
-        nextChar(state);
-        int result = expr(state);
-        skipSpace(state);
-        if (state->ch != ')') {
+    if (stream->ch == '(') {
+        nextChar(stream);
+        int result = expr(stream);
+        skipSpace(stream);
+        if (stream->ch != ')') {
             printf("syntax error\n");
             exit(EXIT_FAILURE);
         }
-        nextChar(state);
+        nextChar(stream);
         return result;
     }
     printf("syntax error\n");
     exit(EXIT_FAILURE);
 }
 
-static int readNextNum(LexingState *state)
+static int readNextNum(Stream *stream)
 {
     int num = 0;
-    while (isdigit(state->ch)) {
-        num = num * 10 + (state->ch - '0');
-        nextChar(state);
+    while (isdigit(stream->ch)) {
+        num = num * 10 + (stream->ch - '0');
+        nextChar(stream);
     }
     return num;
 }

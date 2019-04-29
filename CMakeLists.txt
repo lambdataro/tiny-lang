@@ -4,7 +4,7 @@ project(tiny-lang)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 
-add_executable(TinyLang Main.c)
+add_executable(TinyLang Main.c Stream.c Stream.h Util.c Util.h)
 
 enable_testing()
 
@@ -15,3 +15,4 @@ endfunction(do_test)
 
 do_test(test01 "11\n$")
 do_test(test02 "190\n$")
+do_test(test03 "6\n$")
