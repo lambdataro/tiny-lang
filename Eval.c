@@ -1,11 +1,13 @@
 #include "Eval.h"
 
 static Value *eval(Ast *ast);
+static Value *calc_unary(AstType type, Value *lhs);
 static Value *calc_binary(AstType type, Value *lhs, Value *rhs);
 static Value *calc_add(Value *lhs, Value *rhs);
 static Value *calc_sub(Value *lhs, Value *rhs);
 static Value *calc_mul(Value *lhs, Value *rhs);
 static Value *calc_div(Value *lhs, Value *rhs);
+static Value *calc_seq(Value *lhs, Value *rhs);
 
 Value *startEval(Ast *ast)
 {
@@ -16,6 +18,14 @@ static Value *eval(Ast *ast)
 {
     if (ast->type == AST_INT) {
         return createIntValue(ast->intVal);
+    }
+
+    if (isUnaryOpAst(ast)) {
+        Value *lhs = eval(ast->lhs);
+        if (isErrorValue(lhs)) {
+            return lhs;
+        }
+        return calc_unary(ast->type, lhs);
     }
 
     if (isBinaryOpAst(ast)) {
@@ -34,6 +44,17 @@ static Value *eval(Ast *ast)
     return createErrorValue("runtime error");
 }
 
+static Value *calc_unary(AstType type, Value *lhs)
+{
+    if (type != AST_PRINT) {
+        destroyValue(lhs);
+        return createErrorValue("unknown unary operator");
+    }
+    fprintValue(stdout, lhs);
+    printf("\n");
+    return lhs;
+}
+
 static Value *calc_binary(AstType type, Value *lhs, Value *rhs)
 {
     switch (type) {
@@ -45,10 +66,12 @@ static Value *calc_binary(AstType type, Value *lhs, Value *rhs)
         return calc_mul(lhs, rhs);
     case AST_DIV:
         return calc_div(lhs, rhs);
+    case AST_SEQ:
+        return calc_seq(lhs, rhs);
     default:
         destroyValue(lhs);
         destroyValue(rhs);
-        return NULL;
+        return createErrorValue("unknown binary operator");
     }
 }
 
@@ -107,4 +130,10 @@ static Value *calc_div(Value *lhs, Value *rhs)
     destroyValue(lhs);
     destroyValue(rhs);
     return result;
+}
+
+static Value *calc_seq(Value *lhs, Value *rhs)
+{
+    destroyValue(lhs);
+    return rhs;
 }

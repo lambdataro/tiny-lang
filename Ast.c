@@ -21,6 +21,17 @@ Ast *createErrorAst(const char *message)
     return ast;
 }
 
+Ast *createUnaryOpAst(AstType type, Ast *lhs)
+{
+    if (lhs->type == AST_ERROR) {
+        return lhs;
+    }
+
+    Ast *ast = createAst(type);
+    ast->lhs = lhs;
+    return ast;
+}
+
 Ast *createBinaryOpAst(AstType type, Ast *lhs, Ast *rhs)
 {
     if (lhs->type == AST_ERROR) {
@@ -61,6 +72,12 @@ void fprintAst(FILE *file, Ast *ast, int indent)
         return;
     }
 
+    if (isUnaryOpAst(ast)) {
+        fprintf(file, "%s:\n", astTypeName(ast->type));
+        fprintAst(file, ast->lhs, indent + 1);
+        return;
+    }
+
     if (isBinaryOpAst(ast)) {
         fprintf(file, "%s:\n", astTypeName(ast->type));
         fprintAst(file, ast->lhs, indent + 1);
@@ -92,9 +109,18 @@ static const char *astTypeName(AstType type)
         return "AST_MUL";
     case AST_DIV:
         return "AST_DIV";
+    case AST_PRINT:
+        return "AST_PRINT";
+    case AST_SEQ:
+        return "AST_SEQ";
     default:
         return "(unknown ast)";
     }
+}
+
+bool isUnaryOpAst(Ast *ast)
+{
+    return ast->type == AST_PRINT;
 }
 
 bool isBinaryOpAst(Ast *ast)
@@ -104,6 +130,7 @@ bool isBinaryOpAst(Ast *ast)
     case AST_SUB:
     case AST_MUL:
     case AST_DIV:
+    case AST_SEQ:
         return true;
     default:
         return false;

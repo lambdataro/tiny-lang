@@ -66,8 +66,6 @@ static void parseAndRunCode(Stream *stream)
 
     if (ast->type!=AST_ERROR) {
         Value *value = startEval(ast);
-        fprintValue(stdout, value);
-        fprintf(stdout, "\n");
         destroyValue(value);
     }
 

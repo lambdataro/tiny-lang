@@ -1,10 +1,17 @@
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 #include <ctype.h>
 #include "Lexing.h"
 #include "Util.h"
+#include "StringBuffer.h"
 
+static bool isIdStartChar(int ch);
+static bool isIdChar(int ch);
 static void nextChar(LexingState *state);
 static void skipSpace(LexingState *state);
+static Token *readIdToken(LexingState *state);
+static char *readIdString(LexingState *state);
 static Token *readIntToken(LexingState *state);
 static Token *readSymbolToken(LexingState *state);
 
@@ -18,6 +25,7 @@ static struct {
     {'/', TOKEN_SLASH},
     {'(', TOKEN_LEFT_PAREN},
     {')', TOKEN_RIGHT_PAREN},
+    {';', TOKEN_SEMICOLON},
     {'\0', END_OF_TOKEN_TYPE_LIST}
 };
 
@@ -53,7 +61,21 @@ Token *nextToken(LexingState *state)
         return state->token = readIntToken(state);
     }
 
+    if (isIdStartChar(state->ch)) {
+        return state->token = readIdToken(state);
+    }
+
     return state->token = readSymbolToken(state);
+}
+
+static bool isIdStartChar(int ch)
+{
+    return isalpha(ch) || ch == '_';
+}
+
+static bool isIdChar(int ch)
+{
+    return isalnum(ch) || ch == '_';
 }
 
 static void nextChar(LexingState *state)
@@ -78,6 +100,31 @@ static Token *readIntToken(LexingState *state)
     Token *token = createToken(TOKEN_INT);
     token->intVal = value;
     return token;
+}
+
+static Token *readIdToken(LexingState *state)
+{
+    char *str = readIdString(state);
+    if (strcmp(str, "print") == 0) {
+        Token *token = createToken(TOKEN_KWD_PRINT);
+        free(str);
+        return token;
+    }
+    Token *token = createToken(TOKEN_ID);
+    token->strVal = str;
+    return token;
+}
+
+static char *readIdString(LexingState *state)
+{
+    StringBuffer *buffer = createStringBuffer();
+    while (isIdChar(state->ch)) {
+        stringBufferAddChar(buffer, state->ch);
+        nextChar(state);
+    }
+    char *str = stringBufferToString(buffer);
+    destroyStringBuffer(buffer);
+    return str;
 }
 
 static Token *readSymbolToken(LexingState *state)

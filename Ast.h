@@ -10,7 +10,9 @@ typedef enum {
     AST_ADD,
     AST_SUB,
     AST_MUL,
-    AST_DIV
+    AST_DIV,
+    AST_PRINT,
+    AST_SEQ
 } AstType;
 
 typedef struct Ast {
@@ -28,6 +30,7 @@ Ast *createUnaryOpAst(AstType type, Ast *lhs);
 Ast *createBinaryOpAst(AstType type, Ast *lhs, Ast *rhs);
 void destroyAst(Ast *ast);
 void fprintAst(FILE *file, Ast *ast, int indent);
+bool isUnaryOpAst(Ast *ast);
 bool isBinaryOpAst(Ast *ast);
 
 #endif // TINY_LANG_AST_H_INCLUDED
