@@ -3,17 +3,19 @@
 #include "StringBuffer.h"
 
 static Value *eval(SymbolTable *table, Ast *ast);
-static Value *calc_unary(AstType type, Value *lhs);
-static Value *calc_binary(AstType type, Value *lhs, Value *rhs);
-static Value *calc_add(Value *lhs, Value *rhs);
-static Value *calc_sub(Value *lhs, Value *rhs);
-static Value *calc_mul(Value *lhs, Value *rhs);
-static Value *calc_div(Value *lhs, Value *rhs);
-static Value *calc_seq(Value *lhs, Value *rhs);
+static Value *calcUnary(AstType type, Value *lhs);
+static Value *calcBinary(AstType type, Value *lhs, Value *rhs);
+static Value *calcAdd(Value *lhs, Value *rhs);
+static Value *calcSub(Value *lhs, Value *rhs);
+static Value *calcMul(Value *lhs, Value *rhs);
+static Value *calcDiv(Value *lhs, Value *rhs);
+static Value *calcLessThan(Value *lhs, Value *rhs);
+static Value *calcSeq(Value *lhs, Value *rhs);
 static Value *evalId(SymbolTable *table, Ast *ast);
 static Value *evalAssign(SymbolTable *table, Ast *ast);
 static Value *evalBinaryOp(SymbolTable *table, Ast *ast);
 static Value *evalUnaryOp(SymbolTable *table, Ast *ast);
+static Value *evalWhile(SymbolTable *table, Ast *ast);
 
 Value *startEval(SymbolTable *table, Ast *ast)
 {
@@ -29,6 +31,8 @@ static Value *eval(SymbolTable *table, Ast *ast)
         return createIntValue(ast->intVal);
     case AST_ASSIGN:
         return evalAssign(table, ast);
+    case AST_WHILE:
+        return evalWhile(table, ast);
     default:
         if (isUnaryOpAst(ast)) {
             return evalUnaryOp(table, ast);
@@ -70,7 +74,7 @@ static Value *evalUnaryOp(SymbolTable *table, Ast *ast)
     if (isErrorValue(lhs)) {
         return lhs;
     }
-    return calc_unary(ast->type, lhs);
+    return calcUnary(ast->type, lhs);
 }
 
 static Value *evalBinaryOp(SymbolTable *table, Ast *ast)
@@ -84,10 +88,10 @@ static Value *evalBinaryOp(SymbolTable *table, Ast *ast)
         destroyValue(lhs);
         return rhs;
     }
-    return calc_binary(ast->type, lhs, rhs);
+    return calcBinary(ast->type, lhs, rhs);
 }
 
-static Value *calc_unary(AstType type, Value *lhs)
+static Value *calcUnary(AstType type, Value *lhs)
 {
     if (type != AST_PRINT) {
         destroyValue(lhs);
@@ -98,19 +102,21 @@ static Value *calc_unary(AstType type, Value *lhs)
     return lhs;
 }
 
-static Value *calc_binary(AstType type, Value *lhs, Value *rhs)
+static Value *calcBinary(AstType type, Value *lhs, Value *rhs)
 {
     switch (type) {
     case AST_ADD:
-        return calc_add(lhs, rhs);
+        return calcAdd(lhs, rhs);
     case AST_SUB:
-        return calc_sub(lhs, rhs);
+        return calcSub(lhs, rhs);
     case AST_MUL:
-        return calc_mul(lhs, rhs);
+        return calcMul(lhs, rhs);
     case AST_DIV:
-        return calc_div(lhs, rhs);
+        return calcDiv(lhs, rhs);
+    case AST_LESS_THAN:
+        return calcLessThan(lhs, rhs);
     case AST_SEQ:
-        return calc_seq(lhs, rhs);
+        return calcSeq(lhs, rhs);
     default:
         destroyValue(lhs);
         destroyValue(rhs);
@@ -118,7 +124,7 @@ static Value *calc_binary(AstType type, Value *lhs, Value *rhs)
     }
 }
 
-static Value *calc_add(Value *lhs, Value *rhs)
+static Value *calcAdd(Value *lhs, Value *rhs)
 {
     if (lhs->type == VALUE_INT && rhs->type == VALUE_INT) {
         Value *result = createIntValue(lhs->intVal + rhs->intVal);
@@ -131,7 +137,7 @@ static Value *calc_add(Value *lhs, Value *rhs)
     return createErrorValue("type error: add");
 }
 
-static Value *calc_sub(Value *lhs, Value *rhs)
+static Value *calcSub(Value *lhs, Value *rhs)
 {
     if (lhs->type != VALUE_INT || rhs->type != VALUE_INT) {
         destroyValue(lhs);
@@ -144,7 +150,7 @@ static Value *calc_sub(Value *lhs, Value *rhs)
     return result;
 }
 
-static Value *calc_mul(Value *lhs, Value *rhs)
+static Value *calcMul(Value *lhs, Value *rhs)
 {
     if (lhs->type != VALUE_INT || rhs->type != VALUE_INT) {
         destroyValue(lhs);
@@ -157,7 +163,7 @@ static Value *calc_mul(Value *lhs, Value *rhs)
     return result;
 }
 
-static Value *calc_div(Value *lhs, Value *rhs)
+static Value *calcDiv(Value *lhs, Value *rhs)
 {
     if (lhs->type != VALUE_INT || rhs->type != VALUE_INT) {
         destroyValue(lhs);
@@ -175,8 +181,43 @@ static Value *calc_div(Value *lhs, Value *rhs)
     return result;
 }
 
-static Value *calc_seq(Value *lhs, Value *rhs)
+static Value *calcLessThan(Value *lhs, Value *rhs)
+{
+    if (lhs->type != VALUE_INT || rhs->type != VALUE_INT) {
+        destroyValue(lhs);
+        destroyValue(rhs);
+        return createErrorValue("type error: less than");
+    }
+    Value *result = createIntValue(lhs->intVal < rhs->intVal);
+    destroyValue(lhs);
+    destroyValue(rhs);
+    return result;
+}
+
+static Value *calcSeq(Value *lhs, Value *rhs)
 {
     destroyValue(lhs);
     return rhs;
+}
+
+static Value *evalWhile(SymbolTable *table, Ast *ast)
+{
+    while (true) {
+        Value *cond = eval(table, ast->lhs);
+        if (isErrorValue(cond)) {
+            return cond;
+        }
+        if (cond->type != VALUE_INT) {
+            return createErrorValue("invalid condition");
+        }
+        if (cond->intVal == 0) {
+            return cond;
+        }
+        destroyValue(cond);
+        Value *value = eval(table, ast->rhs);
+        if (isErrorValue(value)) {
+            return value;
+        }
+        destroyValue(value);
+    }
 }

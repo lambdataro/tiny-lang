@@ -3,19 +3,24 @@
 #include "Util.h"
 
 static Ast *parseExpr(LexingState *state);
-static Ast *parseSeqExpr(LexingState *state);
+static Ast *parseStmt(LexingState *state);
+static Ast *parseStmtList(LexingState *state);
+static Ast *parseCmpExpr(LexingState *state);
 static Ast *parseAddExpr(LexingState *state);
 static Ast *parseMulExpr(LexingState *state);
 static Ast *parseSimpleExpr(LexingState *state);
 static Ast *parseSimpleExprInt(LexingState *state);
 static Ast *parseSimpleExprId(LexingState *state);
 static Ast *parseSimpleExprParens(LexingState *state);
-static Ast *parseSimpleExprPrint(LexingState *state);
+static Ast *parseAssign(LexingState *state);
+static Ast *parsePrint(LexingState *state);
+static Ast *parseStmtBlock(LexingState *state);
+static Ast *parseWhile(LexingState *state);
 
 Ast *startParse(LexingState *state)
 {
     nextToken(state);
-    Ast *ast = parseSeqExpr(state);
+    Ast *ast = parseStmtList(state);
 
     if (state->token->type != TOKEN_EOF) {
         destroyAst(ast);
@@ -25,20 +30,110 @@ Ast *startParse(LexingState *state)
     return ast;
 }
 
-static Ast *parseSeqExpr(LexingState *state)
+static Ast *parseStmtList(LexingState *state)
 {
-    Ast *lhs = parseExpr(state);
+    Ast *lhs = parseStmt(state);
     if (state->token->type == TOKEN_SEMICOLON) {
         nextToken(state);
-        Ast *rhs = parseSeqExpr(state);
+        Ast *rhs = parseStmtList(state);
         lhs = createBinaryOpAst(AST_SEQ, lhs, rhs);
     }
     return lhs;
 }
 
+static Ast *parseStmt(LexingState *state)
+{
+    switch (state->token->type) {
+    case TOKEN_KWD_PRINT:
+        return parsePrint(state);
+    case TOKEN_ID:
+        return parseAssign(state);
+    case TOKEN_LEFT_BRACE:
+        return parseStmtBlock(state);
+    case TOKEN_KWD_WHILE:
+        return parseWhile(state);
+    default:
+        return createErrorAst("syntax error");
+    }
+}
+
+static Ast *parseAssign(LexingState *state)
+{
+    Ast *ast = createAst(AST_ASSIGN);
+    ast->strVal = allocAndCopyString(state->token->strVal);
+    nextToken(state);
+    if (state->token->type != TOKEN_EQUAL) {
+        destroyAst(ast);
+        return createErrorAst("equal expected");
+    }
+    nextToken(state);
+    ast->lhs = parseExpr(state);
+    return ast;
+}
+
+static Ast *parsePrint(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *ast = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(ast);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    return createUnaryOpAst(AST_PRINT, ast);
+}
+
+static Ast *parseStmtBlock(LexingState *state)
+{
+    nextToken(state);
+    Ast *ast = parseStmtList(state);
+    if (state->token->type != TOKEN_RIGHT_BRACE) {
+        destroyAst(ast);
+        return createErrorAst("unclosed block");
+    }
+    nextToken(state);
+    return ast;
+}
+
+static Ast *parseWhile(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *lhs = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(lhs);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    Ast *rhs = parseStmt(state);
+    return createBinaryOpAst(AST_WHILE, lhs, rhs);
+}
+
 static Ast *parseExpr(LexingState *state)
 {
-    return parseAddExpr(state);
+    return parseCmpExpr(state);
+}
+
+static Ast *parseCmpExpr(LexingState *state)
+{
+    Ast *lhs = parseAddExpr(state);
+    while (true) {
+        if (state->token->type == TOKEN_LEFT_ANGLE) {
+            nextToken(state);
+            Ast *rhs = parseAddExpr(state);
+            lhs = createBinaryOpAst(AST_LESS_THAN, lhs, rhs);
+            continue;
+        }
+        break;
+    }
+    return lhs;
 }
 
 static Ast *parseAddExpr(LexingState *state)
@@ -92,8 +187,6 @@ static Ast *parseSimpleExpr(LexingState *state)
         return parseSimpleExprId(state);
     case TOKEN_LEFT_PAREN:
         return parseSimpleExprParens(state);
-    case TOKEN_KWD_PRINT:
-        return parseSimpleExprPrint(state);
     default:
         return createErrorAst("syntax error");
     }
@@ -112,11 +205,6 @@ static Ast *parseSimpleExprId(LexingState *state)
     Ast *ast = createAst(AST_ID);
     ast->strVal = allocAndCopyString(state->token->strVal);
     nextToken(state);
-    if (state->token->type == TOKEN_EQUAL) {
-        nextToken(state);
-        ast->type = AST_ASSIGN;
-        ast->lhs = parseExpr(state);
-    }
     return ast;
 }
 
@@ -130,20 +218,4 @@ static Ast *parseSimpleExprParens(LexingState *state)
     }
     nextToken(state);
     return ast;
-}
-
-static Ast *parseSimpleExprPrint(LexingState *state)
-{
-    nextToken(state);
-    if (state->token->type != TOKEN_LEFT_PAREN) {
-        return createErrorAst("left paren required");
-    }
-    nextToken(state);
-    Ast *ast = parseExpr(state);
-    if (state->token->type != TOKEN_RIGHT_PAREN) {
-        destroyAst(ast);
-        return createErrorAst("unclosed expression");
-    }
-    nextToken(state);
-    return createUnaryOpAst(AST_PRINT, ast);
 }

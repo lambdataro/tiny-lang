@@ -25,9 +25,22 @@ static struct {
     {'/',  TOKEN_SLASH},
     {'(',  TOKEN_LEFT_PAREN},
     {')',  TOKEN_RIGHT_PAREN},
+    {'{',  TOKEN_LEFT_BRACE},
+    {'}',  TOKEN_RIGHT_BRACE},
     {'=',  TOKEN_EQUAL},
     {';',  TOKEN_SEMICOLON},
+    {'<',  TOKEN_LEFT_ANGLE},
     {'\0', END_OF_TOKEN_TYPE_LIST}
+};
+
+static struct {
+    const char *str;
+    TokenType type;
+} keywordTable[] = {
+    {"print", TOKEN_KWD_PRINT},
+    {"if",    TOKEN_KWD_IF},
+    {"while", TOKEN_KWD_WHILE},
+    {NULL,    END_OF_TOKEN_TYPE_LIST}
 };
 
 LexingState *createLexingState(Stream *stream)
@@ -95,7 +108,7 @@ static Token *readIntToken(LexingState *state)
 {
     int value = 0;
     while (isdigit(state->ch)) {
-        value = value * 10 + (state->ch - '0');
+        value = value*10+(state->ch-'0');
         nextChar(state);
     }
     Token *token = createToken(TOKEN_INT);
@@ -106,10 +119,12 @@ static Token *readIntToken(LexingState *state)
 static Token *readIdToken(LexingState *state)
 {
     char *str = readIdString(state);
-    if (strcmp(str, "print") == 0) {
-        Token *token = createToken(TOKEN_KWD_PRINT);
-        free(str);
-        return token;
+    for (int i = 0; keywordTable[i].str; i++) {
+        if (strcmp(str, keywordTable[i].str) == 0) {
+            Token *token = createToken(keywordTable[i].type);
+            free(str);
+            return token;
+        }
     }
     Token *token = createToken(TOKEN_ID);
     token->strVal = str;

@@ -12,9 +12,11 @@ typedef enum {
     AST_SUB,
     AST_MUL,
     AST_DIV,
+    AST_LESS_THAN,
     AST_ASSIGN,
     AST_PRINT,
     AST_SEQ,
+    AST_WHILE,
     END_OF_AST_TYPE_LIST
 } AstType;
 

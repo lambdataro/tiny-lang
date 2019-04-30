@@ -16,6 +16,7 @@ static struct {
     {AST_SUB,    "AST_SUB"},
     {AST_MUL,    "AST_MUL"},
     {AST_DIV,    "AST_DIV"},
+    {AST_LESS_THAN, "AST_LESS_THAN"},
     {AST_ASSIGN, "AST_ASSIGN"},
     {AST_PRINT,  "AST_PRINT"},
     {AST_SEQ,    "AST_SEQ"},
@@ -144,7 +145,9 @@ bool isBinaryOpAst(Ast *ast)
     case AST_SUB:
     case AST_MUL:
     case AST_DIV:
+    case AST_LESS_THAN:
     case AST_SEQ:
+    case AST_WHILE:
         return true;
     default:
         return false;
