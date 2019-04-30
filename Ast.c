@@ -20,6 +20,8 @@ static struct {
     {AST_ASSIGN, "AST_ASSIGN"},
     {AST_PRINT,  "AST_PRINT"},
     {AST_SEQ,    "AST_SEQ"},
+    {AST_WHILE, "AST_WHILE"},
+    {AST_IF, "AST_IF"},
     {END_OF_AST_TYPE_LIST, NULL}
 };
 

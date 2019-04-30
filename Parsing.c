@@ -16,6 +16,7 @@ static Ast *parseAssign(LexingState *state);
 static Ast *parsePrint(LexingState *state);
 static Ast *parseStmtBlock(LexingState *state);
 static Ast *parseWhile(LexingState *state);
+static Ast *parseIf(LexingState *state);
 
 Ast *startParse(LexingState *state)
 {
@@ -52,6 +53,8 @@ static Ast *parseStmt(LexingState *state)
         return parseStmtBlock(state);
     case TOKEN_KWD_WHILE:
         return parseWhile(state);
+    case TOKEN_KWD_IF:
+        return parseIf(state);
     default:
         return createErrorAst("syntax error");
     }
@@ -114,6 +117,23 @@ static Ast *parseWhile(LexingState *state)
     nextToken(state);
     Ast *rhs = parseStmt(state);
     return createBinaryOpAst(AST_WHILE, lhs, rhs);
+}
+
+static Ast *parseIf(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *lhs = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(lhs);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    Ast *rhs = parseStmt(state);
+    return createBinaryOpAst(AST_IF, lhs, rhs);
 }
 
 static Ast *parseExpr(LexingState *state)

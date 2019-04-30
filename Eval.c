@@ -16,6 +16,7 @@ static Value *evalAssign(SymbolTable *table, Ast *ast);
 static Value *evalBinaryOp(SymbolTable *table, Ast *ast);
 static Value *evalUnaryOp(SymbolTable *table, Ast *ast);
 static Value *evalWhile(SymbolTable *table, Ast *ast);
+static Value *evalIf(SymbolTable *table, Ast *ast);
 
 Value *startEval(SymbolTable *table, Ast *ast)
 {
@@ -33,6 +34,8 @@ static Value *eval(SymbolTable *table, Ast *ast)
         return evalAssign(table, ast);
     case AST_WHILE:
         return evalWhile(table, ast);
+    case AST_IF:
+        return evalIf(table, ast);
     default:
         if (isUnaryOpAst(ast)) {
             return evalUnaryOp(table, ast);
@@ -220,4 +223,24 @@ static Value *evalWhile(SymbolTable *table, Ast *ast)
         }
         destroyValue(value);
     }
+}
+
+static Value *evalIf(SymbolTable *table, Ast *ast)
+{
+    Value *cond = eval(table, ast->lhs);
+    if (isErrorValue(cond)) {
+        return cond;
+    }
+    if (cond->type != VALUE_INT) {
+        return createErrorValue("invalid condition");
+    }
+    if (cond->intVal == 0) {
+        return cond;
+    }
+    destroyValue(cond);
+    Value *value = eval(table, ast->rhs);
+    if (isErrorValue(value)) {
+        return value;
+    }
+    return value;
 }
