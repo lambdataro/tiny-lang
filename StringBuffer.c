@@ -30,6 +30,14 @@ void stringBufferAddChar(StringBuffer *buf, char ch)
     }
 }
 
+void stringBufferAddString(StringBuffer *buf, const char *str)
+{
+    const char *ptr = str;
+    while (*ptr) {
+        stringBufferAddChar(buf, *ptr++);
+    }
+}
+
 char *stringBufferToString(StringBuffer *buf)
 {
     *buf->ptr = '\0';

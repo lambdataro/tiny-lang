@@ -5,6 +5,23 @@
 
 static const char *astTypeName(AstType type);
 
+static struct {
+    AstType type;
+    const char *name;
+} astTypeNameTable[] = {
+    {AST_ERROR,  "AST_ERROR"},
+    {AST_ID,     "AST_ID"},
+    {AST_INT,    "AST_INT"},
+    {AST_ADD,    "AST_ADD"},
+    {AST_SUB,    "AST_SUB"},
+    {AST_MUL,    "AST_MUL"},
+    {AST_DIV,    "AST_DIV"},
+    {AST_ASSIGN, "AST_ASSIGN"},
+    {AST_PRINT,  "AST_PRINT"},
+    {AST_SEQ,    "AST_SEQ"},
+    {END_OF_AST_TYPE_LIST, NULL}
+};
+
 Ast *createAst(AstType type)
 {
     Ast *ast = allocAndCheck(sizeof(Ast));
@@ -91,31 +108,28 @@ void fprintAst(FILE *file, Ast *ast, int indent)
         return;
     }
 
+    if (ast->type == AST_ID) {
+        fprintf(file, "AST_ID(%s)", ast->strVal);
+        return;
+    }
+
+    if (ast->type == AST_ASSIGN) {
+        fprintf(file, "AST_ASSIGN(%s):\n", ast->strVal);
+        fprintAst(file, ast->lhs, indent+1);
+        return;
+    }
+
     fprintf(file, "%s", astTypeName(ast->type));
 }
 
 static const char *astTypeName(AstType type)
 {
-    switch (type) {
-    case AST_ERROR:
-        return "AST_ERROR";
-    case AST_INT:
-        return "AST_INT";
-    case AST_ADD:
-        return "AST_ADD";
-    case AST_SUB:
-        return "AST_SUB";
-    case AST_MUL:
-        return "AST_MUL";
-    case AST_DIV:
-        return "AST_DIV";
-    case AST_PRINT:
-        return "AST_PRINT";
-    case AST_SEQ:
-        return "AST_SEQ";
-    default:
-        return "(unknown ast)";
+    for (int i = 0; astTypeNameTable[i].name; i++) {
+        if (astTypeNameTable[i].type == type) {
+            return astTypeNameTable[i].name;
+        }
     }
+    return "(unknown ast)";
 }
 
 bool isUnaryOpAst(Ast *ast)

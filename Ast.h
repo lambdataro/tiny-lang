@@ -6,13 +6,16 @@
 
 typedef enum {
     AST_ERROR,
+    AST_ID,
     AST_INT,
     AST_ADD,
     AST_SUB,
     AST_MUL,
     AST_DIV,
+    AST_ASSIGN,
     AST_PRINT,
-    AST_SEQ
+    AST_SEQ,
+    END_OF_AST_TYPE_LIST
 } AstType;
 
 typedef struct Ast {

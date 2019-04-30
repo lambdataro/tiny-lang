@@ -1,6 +1,8 @@
 #include "Eval.h"
+#include "SymbolTable.h"
+#include "StringBuffer.h"
 
-static Value *eval(Ast *ast);
+static Value *eval(SymbolTable *table, Ast *ast);
 static Value *calc_unary(AstType type, Value *lhs);
 static Value *calc_binary(AstType type, Value *lhs, Value *rhs);
 static Value *calc_add(Value *lhs, Value *rhs);
@@ -8,40 +10,81 @@ static Value *calc_sub(Value *lhs, Value *rhs);
 static Value *calc_mul(Value *lhs, Value *rhs);
 static Value *calc_div(Value *lhs, Value *rhs);
 static Value *calc_seq(Value *lhs, Value *rhs);
+static Value *evalId(SymbolTable *table, Ast *ast);
+static Value *evalAssign(SymbolTable *table, Ast *ast);
+static Value *evalBinaryOp(SymbolTable *table, Ast *ast);
+static Value *evalUnaryOp(SymbolTable *table, Ast *ast);
 
-Value *startEval(Ast *ast)
+Value *startEval(SymbolTable *table, Ast *ast)
 {
-    return eval(ast);
+    return eval(table, ast);
 }
 
-static Value *eval(Ast *ast)
+static Value *eval(SymbolTable *table, Ast *ast)
 {
-    if (ast->type == AST_INT) {
+    switch (ast->type) {
+    case AST_ID:
+        return evalId(table, ast);
+    case AST_INT:
         return createIntValue(ast->intVal);
-    }
-
-    if (isUnaryOpAst(ast)) {
-        Value *lhs = eval(ast->lhs);
-        if (isErrorValue(lhs)) {
-            return lhs;
+    case AST_ASSIGN:
+        return evalAssign(table, ast);
+    default:
+        if (isUnaryOpAst(ast)) {
+            return evalUnaryOp(table, ast);
         }
-        return calc_unary(ast->type, lhs);
-    }
-
-    if (isBinaryOpAst(ast)) {
-        Value *lhs = eval(ast->lhs);
-        if (isErrorValue(lhs)) {
-            return lhs;
+        if (isBinaryOpAst(ast)) {
+            return evalBinaryOp(table, ast);
         }
-        Value *rhs = eval(ast->rhs);
-        if (isErrorValue(rhs)) {
-            destroyValue(lhs);
-            return rhs;
-        }
-        return calc_binary(ast->type, lhs, rhs);
+        return createErrorValue("runtime error");
     }
+}
 
-    return createErrorValue("runtime error");
+static Value *evalId(SymbolTable *table, Ast *ast)
+{
+    Value *value = findVariable(table, ast->strVal);
+    if (!value) {
+        StringBuffer *buf = createStringBuffer();
+        stringBufferAddString(buf, "undefined valueble: ");
+        stringBufferAddString(buf, ast->strVal);
+        Value *value = createErrorValue(stringBufferToString(buf));
+        destroyStringBuffer(buf);
+        return value;
+    }
+    return value;
+}
+
+static Value *evalAssign(SymbolTable *table, Ast *ast)
+{
+    Value *value = eval(table, ast->lhs);
+    if (isErrorValue(value)) {
+        return value;
+    }
+    addVariable(table, ast->strVal, value);
+    return value;
+}
+
+static Value *evalUnaryOp(SymbolTable *table, Ast *ast)
+{
+    Value *lhs = eval(table, ast->lhs);
+    if (isErrorValue(lhs)) {
+        return lhs;
+    }
+    return calc_unary(ast->type, lhs);
+}
+
+static Value *evalBinaryOp(SymbolTable *table, Ast *ast)
+{
+    Value *lhs = eval(table, ast->lhs);
+    if (isErrorValue(lhs)) {
+        return lhs;
+    }
+    Value *rhs = eval(table, ast->rhs);
+    if (isErrorValue(rhs)) {
+        destroyValue(lhs);
+        return rhs;
+    }
+    return calc_binary(ast->type, lhs, rhs);
 }
 
 static Value *calc_unary(AstType type, Value *lhs)

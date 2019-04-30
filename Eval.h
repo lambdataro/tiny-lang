@@ -3,7 +3,8 @@
 
 #include "Ast.h"
 #include "Value.h"
+#include "SymbolTable.h"
 
-Value *startEval(Ast *ast);
+Value *startEval(SymbolTable *table, Ast *ast);
 
 #endif // TINY_LANG_EVAL_H_INCLUDED

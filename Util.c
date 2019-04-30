@@ -46,3 +46,14 @@ void fprintIndent(FILE *file, int indent)
         fprintf(file, "  ");
     }
 }
+
+size_t hash(const char *str)
+{
+    const int prime = 31;
+    size_t len = strlen(str);
+    size_t value = 0;
+    for (size_t i = 0; i < len; i++) {
+        value = value*prime+str[i];
+    }
+    return value;
+}

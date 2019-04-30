@@ -4,7 +4,7 @@ project(tiny-lang)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 
-add_executable(TinyLang Main.c Stream.c Stream.h Util.c Util.h StringBuffer.c StringBuffer.h Token.c Token.h Lexing.c Lexing.h Ast.c Ast.h Parsing.c Parsing.h Eval.c Eval.h Value.c Value.h)
+add_executable(TinyLang Main.c Stream.c Stream.h Util.c Util.h StringBuffer.c StringBuffer.h Token.c Token.h Lexing.c Lexing.h Ast.c Ast.h Parsing.c Parsing.h Eval.c Eval.h Value.c Value.h SymbolTable.c SymbolTable.h)
 
 enable_testing()
 

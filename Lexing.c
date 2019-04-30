@@ -19,13 +19,14 @@ static struct {
     const char ch;
     TokenType type;
 } symbolTokenTable[] = {
-    {'+', TOKEN_PLUS},
-    {'-', TOKEN_MINUS},
-    {'*', TOKEN_ASTERISK},
-    {'/', TOKEN_SLASH},
-    {'(', TOKEN_LEFT_PAREN},
-    {')', TOKEN_RIGHT_PAREN},
-    {';', TOKEN_SEMICOLON},
+    {'+',  TOKEN_PLUS},
+    {'-',  TOKEN_MINUS},
+    {'*',  TOKEN_ASTERISK},
+    {'/',  TOKEN_SLASH},
+    {'(',  TOKEN_LEFT_PAREN},
+    {')',  TOKEN_RIGHT_PAREN},
+    {'=',  TOKEN_EQUAL},
+    {';',  TOKEN_SEMICOLON},
     {'\0', END_OF_TOKEN_TYPE_LIST}
 };
 

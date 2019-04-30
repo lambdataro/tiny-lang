@@ -10,7 +10,7 @@
 
 static void runFile(const char *filename);
 static void runRepl(void);
-static void parseAndRunCode(Stream *stream);
+static void parseAndRunCode(Stream *stream, SymbolTable *table);
 
 int main(int argc, char *argv[])
 {
@@ -36,12 +36,15 @@ static void runFile(const char *filename)
         fprintf(stderr, "failed to open file: \"%s\"\n", filename);
         exit(EXIT_FAILURE);
     }
-    parseAndRunCode(stream);
+    SymbolTable *table = createSymbolTable();
+    parseAndRunCode(stream, table);
     destroyStream(stream);
+    destroySymbolTable(table);
 }
 
 static void runRepl(void)
 {
+    SymbolTable *table = createSymbolTable();
     while (true) {
         printf("> ");
         fflush(stdout);
@@ -52,20 +55,21 @@ static void runRepl(void)
         }
         Stream *stream = createStringStream(str);
         free(str);
-        parseAndRunCode(stream);
+        parseAndRunCode(stream, table);
         destroyStream(stream);
     }
+    destroySymbolTable(table);
 }
 
-static void parseAndRunCode(Stream *stream)
+static void parseAndRunCode(Stream *stream, SymbolTable *table)
 {
     LexingState *state = createLexingState(stream);
     Ast *ast = startParse(state);
     fprintAst(stdout, ast, 0);
     fprintf(stdout, "\n\n");
 
-    if (ast->type!=AST_ERROR) {
-        Value *value = startEval(ast);
+    if (ast->type != AST_ERROR) {
+        Value *value = startEval(table, ast);
         destroyValue(value);
     }
 

@@ -12,6 +12,7 @@ typedef struct {
 StringBuffer *createStringBuffer(void);
 void destroyStringBuffer(StringBuffer *buf);
 void stringBufferAddChar(StringBuffer *buf, char ch);
+void stringBufferAddString(StringBuffer *buf, const char *str);
 char *stringBufferToString(StringBuffer *buf);
 
 #endif // TINY_LANG_STRINGBUFFER_H_INCLUDED
