@@ -1,69 +1,52 @@
 #include <stdlib.h>
 #include "Value.h"
 #include "Util.h"
+#include "Memory.h"
 
-static Value *createValue(ValueType type);
+static Value *createValue(MemoryPool *pool, ValueType type);
 
-static Value *createValue(ValueType type)
+static Value *createValue(MemoryPool *pool, ValueType type)
 {
-    Value *value = allocAndCheck(sizeof(Value));
+    Value *value = allocValue(pool);
     value->type = type;
     return value;
 }
 
-Value *createVoidValue(void)
+Value *createVoidValue(MemoryPool *pool)
 {
-    return createValue(VALUE_VOID);
+    return createValue(pool, VALUE_VOID);
 }
 
-Value *createIntValue(int intVal)
+Value *createIntValue(MemoryPool *pool, int intVal)
 {
-    Value *value = createValue(VALUE_INT);
+    Value *value = createValue(pool, VALUE_INT);
     value->intVal = intVal;
     return value;
 }
 
-Value *createStrValue(const char *strVal)
+Value *createStrValue(MemoryPool *pool, const char *strVal)
 {
-    Value *value = createValue(VALUE_STR);
+    Value *value = createValue(pool, VALUE_STR);
     value->strVal = allocAndCopyString(strVal);
     return value;
 }
 
-Value *createErrorValue(const char *strVal)
+Value *createErrorValue(MemoryPool *pool, const char *strVal)
 {
-    Value *value = createValue(VALUE_ERROR);
+    Value *value = createValue(pool, VALUE_ERROR);
     value->strVal = allocAndCopyString(strVal);
     return value;
 }
 
-void destroyValue(Value *value)
+void destroyValue(MemoryPool *pool, Value *value)
 {
-    if (value->type == VALUE_ERROR) {
-        free(value->strVal);
-    }
-    free(value);
+    freeValue(pool, value);
 }
 
 Value *createValueCopy(Value *srcValue)
 {
-    Value *dstValue = allocAndCheck(sizeof(Value));
-    dstValue->type = srcValue->type;
-    switch (srcValue->type) {
-    case VALUE_VOID:
-        break;
-    case VALUE_INT:
-        dstValue->intVal = srcValue->intVal;
-        break;
-    case VALUE_ERROR:
-    case VALUE_STR:
-        dstValue->strVal = allocAndCopyString(srcValue->strVal);
-        break;
-    default:
-        fprintf(stderr, "failed to copy value\n");
-        exit(EXIT_FAILURE);
-    }
-    return dstValue;
+    incrRefCount(srcValue);
+    return srcValue;
 }
 
 void fprintValue(FILE *file, Value *value)

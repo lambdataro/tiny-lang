@@ -13,8 +13,10 @@ SymbolTable *createSymbolTable(void)
     for (size_t i = 0; i < env->size; i++) {
         env->table[i] = NULL;
     }
+    MemoryPool *pool = createMemoryPool();
     SymbolTable *table = allocAndCheck(sizeof(SymbolTable));
     table->env = env;
+    table->pool = pool;
     return table;
 }
 
@@ -27,13 +29,14 @@ void destroySymbolTable(SymbolTable *table)
             while (entry) {
                 HashEntry *p = entry->next;
                 free(entry->key);
-                destroyValue(entry->value);
+                destroyValue(table->pool, entry->value);
                 free(entry);
                 entry = p;
             }
         }
     }
     free(env);
+    destroyMemoryPool(table->pool);
     free(table);
 }
 
@@ -43,7 +46,7 @@ void addVariable(SymbolTable *table, const char *key, Value *value)
     HashEntry *entry = table->env->table[index];
     while (entry) {
         if (strcmp(key, entry->key) == 0) {
-            destroyValue(entry->value);
+            destroyValue(table->pool, entry->value);
             entry->value = createValueCopy(value);
             return;
         }

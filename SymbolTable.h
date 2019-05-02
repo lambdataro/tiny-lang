@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "Value.h"
+#include "Memory.h"
 
 typedef struct HashEntry {
     char *key;
@@ -18,6 +19,7 @@ typedef struct {
 
 typedef struct {
     HashTable *env;
+    MemoryPool *pool;
 } SymbolTable;
 
 SymbolTable *createSymbolTable(void);

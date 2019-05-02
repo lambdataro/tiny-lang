@@ -46,6 +46,8 @@ static void runRepl(void)
 {
     SymbolTable *table = createSymbolTable();
     while (true) {
+        printf("\n");
+        statistics(table->pool);
         printf("> ");
         fflush(stdout);
         char *str = readConsoleUntilEnterTwice();
@@ -70,7 +72,7 @@ static void parseAndRunCode(Stream *stream, SymbolTable *table)
 
     if (ast->type != AST_ERROR) {
         Value *value = startEval(table, ast);
-        destroyValue(value);
+        destroyValue(table->pool, value);
     }
 
     destroyAst(ast);
