@@ -68,7 +68,8 @@ static Value *evalAssign(SymbolTable *table, Ast *ast)
         return value;
     }
     addVariable(table, ast->strVal, value);
-    return value;
+    destroyValue(value);
+    return createVoidValue();
 }
 
 static Value *evalUnaryOp(SymbolTable *table, Ast *ast)
@@ -214,7 +215,8 @@ static Value *evalWhile(SymbolTable *table, Ast *ast)
             return createErrorValue("invalid condition");
         }
         if (cond->intVal == 0) {
-            return cond;
+            destroyValue(cond);
+            return createVoidValue();
         }
         destroyValue(cond);
         Value *value = eval(table, ast->rhs);
@@ -235,12 +237,14 @@ static Value *evalIf(SymbolTable *table, Ast *ast)
         return createErrorValue("invalid condition");
     }
     if (cond->intVal == 0) {
-        return cond;
+        destroyValue(cond);
+        return createVoidValue();
     }
     destroyValue(cond);
     Value *value = eval(table, ast->rhs);
     if (isErrorValue(value)) {
         return value;
     }
-    return value;
+    destroyValue(value);
+    return createVoidValue();
 }

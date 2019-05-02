@@ -11,6 +11,11 @@ static Value *createValue(ValueType type)
     return value;
 }
 
+Value *createVoidValue(void)
+{
+    return createValue(VALUE_VOID);
+}
+
 Value *createIntValue(int intVal)
 {
     Value *value = createValue(VALUE_INT);
@@ -38,6 +43,8 @@ Value *createValueCopy(Value *srcValue)
     Value *dstValue = allocAndCheck(sizeof(Value));
     dstValue->type = srcValue->type;
     switch (srcValue->type) {
+    case VALUE_VOID:
+        break;
     case VALUE_INT:
         dstValue->intVal = srcValue->intVal;
         break;
@@ -60,6 +67,9 @@ void fprintValue(FILE *file, Value *value)
     switch (value->type) {
     case VALUE_ERROR:
         fprintf(file, "Error: %s", value->strVal);
+        return;
+    case VALUE_VOID:
+        fprintf(file, "(void)");
         return;
     case VALUE_INT:
         fprintf(file, "%d", value->intVal);

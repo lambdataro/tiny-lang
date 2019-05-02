@@ -6,6 +6,7 @@
 
 typedef enum {
     VALUE_ERROR,
+    VALUE_VOID,
     VALUE_INT
 } ValueType;
 
@@ -17,6 +18,7 @@ typedef struct {
     };
 } Value;
 
+Value *createVoidValue(void);
 Value *createIntValue(int intVal);
 Value *createErrorValue(const char *strVal);
 void destroyValue(Value *value);
