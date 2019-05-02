@@ -7,7 +7,8 @@
 typedef enum {
     VALUE_ERROR,
     VALUE_VOID,
-    VALUE_INT
+    VALUE_INT,
+    VALUE_STR
 } ValueType;
 
 typedef struct {
@@ -20,6 +21,7 @@ typedef struct {
 
 Value *createVoidValue(void);
 Value *createIntValue(int intVal);
+Value *createStrValue(const char *strVal);
 Value *createErrorValue(const char *strVal);
 void destroyValue(Value *value);
 Value *createValueCopy(Value *value);

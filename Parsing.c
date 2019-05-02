@@ -10,6 +10,7 @@ static Ast *parseAddExpr(LexingState *state);
 static Ast *parseMulExpr(LexingState *state);
 static Ast *parseSimpleExpr(LexingState *state);
 static Ast *parseSimpleExprInt(LexingState *state);
+static Ast *parseSimpleExprStr(LexingState *state);
 static Ast *parseSimpleExprId(LexingState *state);
 static Ast *parseSimpleExprParens(LexingState *state);
 static Ast *parseAssign(LexingState *state);
@@ -203,6 +204,8 @@ static Ast *parseSimpleExpr(LexingState *state)
     switch (state->token->type) {
     case TOKEN_INT:
         return parseSimpleExprInt(state);
+    case TOKEN_STR:
+        return parseSimpleExprStr(state);
     case TOKEN_ID:
         return parseSimpleExprId(state);
     case TOKEN_LEFT_PAREN:
@@ -216,6 +219,14 @@ static Ast *parseSimpleExprInt(LexingState *state)
 {
     Ast *ast = createAst(AST_INT);
     ast->intVal = state->token->intVal;
+    nextToken(state);
+    return ast;
+}
+
+static Ast *parseSimpleExprStr(LexingState *state)
+{
+    Ast *ast = createAst(AST_STR);
+    ast->strVal = state->token->strVal;
     nextToken(state);
     return ast;
 }

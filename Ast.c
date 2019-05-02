@@ -9,19 +9,20 @@ static struct {
     AstType type;
     const char *name;
 } astTypeNameTable[] = {
-    {AST_ERROR,  "AST_ERROR"},
-    {AST_ID,     "AST_ID"},
-    {AST_INT,    "AST_INT"},
-    {AST_ADD,    "AST_ADD"},
-    {AST_SUB,    "AST_SUB"},
-    {AST_MUL,    "AST_MUL"},
-    {AST_DIV,    "AST_DIV"},
+    {AST_ERROR,     "AST_ERROR"},
+    {AST_ID,        "AST_ID"},
+    {AST_STR,       "AST_STR"},
+    {AST_INT,       "AST_INT"},
+    {AST_ADD,       "AST_ADD"},
+    {AST_SUB,       "AST_SUB"},
+    {AST_MUL,       "AST_MUL"},
+    {AST_DIV,       "AST_DIV"},
     {AST_LESS_THAN, "AST_LESS_THAN"},
-    {AST_ASSIGN, "AST_ASSIGN"},
-    {AST_PRINT,  "AST_PRINT"},
-    {AST_SEQ,    "AST_SEQ"},
-    {AST_WHILE, "AST_WHILE"},
-    {AST_IF, "AST_IF"},
+    {AST_ASSIGN,    "AST_ASSIGN"},
+    {AST_PRINT,     "AST_PRINT"},
+    {AST_SEQ,       "AST_SEQ"},
+    {AST_WHILE,     "AST_WHILE"},
+    {AST_IF,        "AST_IF"},
     {END_OF_AST_TYPE_LIST, NULL}
 };
 
@@ -37,6 +38,13 @@ Ast *createAst(AstType type)
 Ast *createErrorAst(const char *message)
 {
     Ast *ast = createAst(AST_ERROR);
+    ast->strVal = allocAndCopyString(message);
+    return ast;
+}
+
+Ast *createStrAst(const char *message)
+{
+    Ast *ast = createAst(AST_STR);
     ast->strVal = allocAndCopyString(message);
     return ast;
 }

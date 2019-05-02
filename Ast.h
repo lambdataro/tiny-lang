@@ -7,6 +7,7 @@
 typedef enum {
     AST_ERROR,
     AST_ID,
+    AST_STR,
     AST_INT,
     AST_ADD,
     AST_SUB,
@@ -32,6 +33,7 @@ typedef struct Ast {
 
 Ast *createAst(AstType type);
 Ast *createErrorAst(const char *message);
+Ast *createStrAst(const char *message);
 Ast *createUnaryOpAst(AstType type, Ast *lhs);
 Ast *createBinaryOpAst(AstType type, Ast *lhs, Ast *rhs);
 void destroyAst(Ast *ast);

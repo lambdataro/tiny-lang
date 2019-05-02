@@ -23,6 +23,13 @@ Value *createIntValue(int intVal)
     return value;
 }
 
+Value *createStrValue(const char *strVal)
+{
+    Value *value = createValue(VALUE_STR);
+    value->strVal = allocAndCopyString(strVal);
+    return value;
+}
+
 Value *createErrorValue(const char *strVal)
 {
     Value *value = createValue(VALUE_ERROR);
@@ -49,6 +56,7 @@ Value *createValueCopy(Value *srcValue)
         dstValue->intVal = srcValue->intVal;
         break;
     case VALUE_ERROR:
+    case VALUE_STR:
         dstValue->strVal = allocAndCopyString(srcValue->strVal);
         break;
     default:
@@ -73,6 +81,9 @@ void fprintValue(FILE *file, Value *value)
         return;
     case VALUE_INT:
         fprintf(file, "%d", value->intVal);
+        return;
+    case VALUE_STR:
+        fprintf(file, "%s", value->strVal);
         return;
     default:
         fprintf(file, "(unknown value)");

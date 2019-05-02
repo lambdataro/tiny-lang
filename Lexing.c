@@ -12,6 +12,8 @@ static void nextChar(LexingState *state);
 static void skipSpace(LexingState *state);
 static Token *readIdToken(LexingState *state);
 static char *readIdString(LexingState *state);
+static Token *readStrToken(LexingState *state);
+static char escapeChar(char ch);
 static Token *readIntToken(LexingState *state);
 static Token *readSymbolToken(LexingState *state);
 
@@ -79,6 +81,10 @@ Token *nextToken(LexingState *state)
         return state->token = readIdToken(state);
     }
 
+    if (state->ch == '\"') {
+        return state->token = readStrToken(state);
+    }
+
     return state->token = readSymbolToken(state);
 }
 
@@ -141,6 +147,44 @@ static char *readIdString(LexingState *state)
     char *str = stringBufferToString(buffer);
     destroyStringBuffer(buffer);
     return str;
+}
+
+static Token *readStrToken(LexingState *state)
+{
+    nextChar(state);
+    StringBuffer *buffer = createStringBuffer();
+    while (state->ch != '\"' && state->ch != EOF) {
+        if (state->ch == '\\') {
+            nextChar(state);
+            if (state->ch == EOF) {
+                break;
+            }
+            state->ch = escapeChar(state->ch);
+        }
+        stringBufferAddChar(buffer, state->ch);
+        nextChar(state);
+    }
+    if (state->ch == '\"') {
+        nextChar(state);
+    }
+    Token *token = createToken(TOKEN_STR);
+    token->strVal = stringBufferToString(buffer);
+    destroyStringBuffer(buffer);
+    return token;
+}
+
+static char escapeChar(char ch)
+{
+    switch (ch) {
+    case 'n':
+        return '\n';
+    case 'r':
+        return '\r';
+    case 't':
+        return '\t';
+    default:
+        return ch;
+    }
 }
 
 static Token *readSymbolToken(LexingState *state)

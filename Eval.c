@@ -30,6 +30,8 @@ static Value *eval(SymbolTable *table, Ast *ast)
         return evalId(table, ast);
     case AST_INT:
         return createIntValue(ast->intVal);
+    case AST_STR:
+        return createStrValue(ast->strVal);
     case AST_ASSIGN:
         return evalAssign(table, ast);
     case AST_WHILE:
