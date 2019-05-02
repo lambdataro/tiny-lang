@@ -4,6 +4,7 @@
 #include <inttypes.h>
 #include "Memory.h"
 #include "Util.h"
+#include "Value.h"
 
 #define MEMORY_POOL_SIZE 10
 
@@ -54,6 +55,10 @@ void freeValue(MemoryPool *pool, Value *value)
     }
     if (value->type == VALUE_ERROR || value->type == VALUE_STR) {
         free(value->strVal);
+    }
+    if (value->type == VALUE_PAIR) {
+        freeValue(pool, value->pairVal.fstValue);
+        freeValue(pool, value->pairVal.sndValue);
     }
     slot->header.next = pool->freeList;
     pool->freeList = slot;

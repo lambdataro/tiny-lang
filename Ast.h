@@ -19,6 +19,7 @@ typedef enum {
     AST_SEQ,
     AST_WHILE,
     AST_IF,
+    AST_PAIR,
     END_OF_AST_TYPE_LIST
 } AstType;
 

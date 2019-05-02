@@ -38,6 +38,14 @@ Value *createErrorValue(MemoryPool *pool, const char *strVal)
     return value;
 }
 
+Value *createPairValue(MemoryPool *pool, Value *fstValue, Value *sndValue)
+{
+    Value *value = createValue(pool, VALUE_PAIR);
+    value->pairVal.fstValue = createValueCopy(fstValue);
+    value->pairVal.sndValue = createValueCopy(sndValue);
+    return value;
+}
+
 void destroyValue(MemoryPool *pool, Value *value)
 {
     freeValue(pool, value);
@@ -67,6 +75,13 @@ void fprintValue(FILE *file, Value *value)
         return;
     case VALUE_STR:
         fprintf(file, "%s", value->strVal);
+        return;
+    case VALUE_PAIR:
+        fprintf(file, "[");
+        fprintValue(file, value->pairVal.fstValue);
+        fprintf(file, ", ");
+        fprintValue(file, value->pairVal.sndValue);
+        fprintf(file, "]");
         return;
     default:
         fprintf(file, "(unknown value)");

@@ -17,6 +17,7 @@ static Value *evalBinaryOp(SymbolTable *table, Ast *ast);
 static Value *evalUnaryOp(SymbolTable *table, Ast *ast);
 static Value *evalWhile(SymbolTable *table, Ast *ast);
 static Value *evalIf(SymbolTable *table, Ast *ast);
+static Value *calcPair(SymbolTable *table, Value *lhs, Value *rhs);
 
 Value *startEval(SymbolTable *table, Ast *ast)
 {
@@ -123,6 +124,8 @@ static Value *calcBinary(SymbolTable *table, AstType type, Value *lhs, Value *rh
         return calcLessThan(table, lhs, rhs);
     case AST_SEQ:
         return calcSeq(table, lhs, rhs);
+    case AST_PAIR:
+        return calcPair(table, lhs, rhs);
     default:
         destroyValue(table->pool, lhs);
         destroyValue(table->pool, rhs);
@@ -204,6 +207,14 @@ static Value *calcSeq(SymbolTable *table, Value *lhs, Value *rhs)
 {
     destroyValue(table->pool, lhs);
     return rhs;
+}
+
+static Value *calcPair(SymbolTable *table, Value *lhs, Value *rhs)
+{
+    Value *value = createPairValue(table->pool, lhs, rhs);
+    destroyValue(table->pool, lhs);
+    destroyValue(table->pool, rhs);
+    return value;
 }
 
 static Value *evalWhile(SymbolTable *table, Ast *ast)

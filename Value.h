@@ -10,14 +10,19 @@ typedef enum {
     VALUE_ERROR,
     VALUE_VOID,
     VALUE_INT,
-    VALUE_STR
+    VALUE_STR,
+    VALUE_PAIR
 } ValueType;
 
-typedef struct {
+typedef struct Value {
     ValueType type;
     union {
         int intVal;
         char *strVal;
+        struct {
+            struct Value *fstValue;
+            struct Value *sndValue;
+        } pairVal;
     };
 } Value;
 
@@ -25,6 +30,7 @@ Value *createVoidValue(MemoryPool *pool);
 Value *createIntValue(MemoryPool *pool, int intVal);
 Value *createStrValue(MemoryPool *pool, const char *strVal);
 Value *createErrorValue(MemoryPool *pool, const char *strVal);
+Value *createPairValue(MemoryPool *pool, Value *fstValue, Value *sndValue);
 void destroyValue(MemoryPool *pool, Value *value);
 Value *createValueCopy(Value *value);
 void fprintValue(FILE *file, Value *value);

@@ -18,6 +18,7 @@ static Ast *parsePrint(LexingState *state);
 static Ast *parseStmtBlock(LexingState *state);
 static Ast *parseWhile(LexingState *state);
 static Ast *parseIf(LexingState *state);
+static Ast *parseSimpleExprPair(LexingState *state);
 
 Ast *startParse(LexingState *state)
 {
@@ -210,6 +211,8 @@ static Ast *parseSimpleExpr(LexingState *state)
         return parseSimpleExprId(state);
     case TOKEN_LEFT_PAREN:
         return parseSimpleExprParens(state);
+    case TOKEN_LEFT_BRACKET:
+        return parseSimpleExprPair(state);
     default:
         return createErrorAst("syntax error");
     }
@@ -249,4 +252,23 @@ static Ast *parseSimpleExprParens(LexingState *state)
     }
     nextToken(state);
     return ast;
+}
+
+static Ast *parseSimpleExprPair(LexingState *state)
+{
+    nextToken(state);
+    Ast *fstExpr = parseExpr(state);
+    if (state->token->type != TOKEN_COMMA) {
+        destroyAst(fstExpr);
+        return createErrorAst("comma expected");
+    }
+    nextToken(state);
+    Ast *sndExpr = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_BRACKET) {
+        destroyAst(fstExpr);
+        destroyAst(sndExpr);
+        return createErrorAst("unclosed bracket");
+    }
+    nextToken(state);
+    return createBinaryOpAst(AST_PAIR, fstExpr, sndExpr);
 }

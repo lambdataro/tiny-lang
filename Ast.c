@@ -23,6 +23,7 @@ static struct {
     {AST_SEQ,       "AST_SEQ"},
     {AST_WHILE,     "AST_WHILE"},
     {AST_IF,        "AST_IF"},
+    {AST_PAIR, "AST_PAIR"},
     {END_OF_AST_TYPE_LIST, NULL}
 };
 
@@ -158,6 +159,7 @@ bool isBinaryOpAst(Ast *ast)
     case AST_LESS_THAN:
     case AST_SEQ:
     case AST_WHILE:
+    case AST_PAIR:
         return true;
     default:
         return false;
