@@ -1,6 +1,7 @@
 #include "Eval.h"
 #include "SymbolTable.h"
 #include "StringBuffer.h"
+#include "Value.h"
 
 static Value *eval(SymbolTable *table, Ast *ast);
 static Value *calcUnary(SymbolTable *table, AstType type, Value *lhs);
@@ -18,6 +19,9 @@ static Value *evalUnaryOp(SymbolTable *table, Ast *ast);
 static Value *evalWhile(SymbolTable *table, Ast *ast);
 static Value *evalIf(SymbolTable *table, Ast *ast);
 static Value *calcPair(SymbolTable *table, Value *lhs, Value *rhs);
+static Value *calcToString(SymbolTable *table, Value *lhs);
+static Value *calcFst(SymbolTable *table, Value *lhs);
+static Value *calcSnd(SymbolTable *table, Value *lhs);
 
 Value *startEval(SymbolTable *table, Ast *ast)
 {
@@ -100,13 +104,56 @@ static Value *evalBinaryOp(SymbolTable *table, Ast *ast)
 
 static Value *calcUnary(SymbolTable *table, AstType type, Value *lhs)
 {
-    if (type != AST_PRINT) {
+    switch (type) {
+    case AST_PRINT:
+        fprintValue(stdout, lhs);
+        printf("\n");
+        return lhs;
+    case AST_TO_STRING:
+        return calcToString(table, lhs);
+    case AST_FST:
+        return calcFst(table, lhs);
+    case AST_SND:
+        return calcSnd(table, lhs);
+    default:
         destroyValue(table->pool, lhs);
         return createErrorValue(table->pool, "unknown unary operator");
     }
-    fprintValue(stdout, lhs);
-    printf("\n");
-    return lhs;
+
+}
+
+static Value *calcToString(SymbolTable *table, Value *lhs)
+{
+    if (lhs->type != VALUE_INT) {
+        destroyValue(table->pool, lhs);
+        return createErrorValue(table->pool, "type error: str");
+    }
+    char buf[32];
+    sprintf(buf, "%d", lhs->intVal);
+    destroyValue(table->pool, lhs);
+    return createStrValue(table->pool, buf);
+}
+
+static Value *calcFst(SymbolTable *table, Value *lhs)
+{
+    if (lhs->type != VALUE_PAIR) {
+        destroyValue(table->pool, lhs);
+        return createErrorValue(table->pool, "type error: fst");
+    }
+    Value *value = createValueCopy(lhs->pairVal.fstValue);
+    destroyValue(table->pool, lhs);
+    return value;
+}
+
+static Value *calcSnd(SymbolTable *table, Value *lhs)
+{
+    if (lhs->type != VALUE_PAIR) {
+        destroyValue(table->pool, lhs);
+        return createErrorValue(table->pool, "type error: snd");
+    }
+    Value *value = createValueCopy(lhs->pairVal.sndValue);
+    destroyValue(table->pool, lhs);
+    return value;
 }
 
 static Value *calcBinary(SymbolTable *table, AstType type, Value *lhs, Value *rhs)

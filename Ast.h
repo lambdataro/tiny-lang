@@ -20,6 +20,9 @@ typedef enum {
     AST_WHILE,
     AST_IF,
     AST_PAIR,
+    AST_TO_STRING,
+    AST_FST,
+    AST_SND,
     END_OF_AST_TYPE_LIST
 } AstType;
 

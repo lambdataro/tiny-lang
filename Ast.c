@@ -24,6 +24,9 @@ static struct {
     {AST_WHILE,     "AST_WHILE"},
     {AST_IF,        "AST_IF"},
     {AST_PAIR, "AST_PAIR"},
+    {AST_TO_STRING, "AST_TO_STRING"},
+    {AST_FST, "AST_FST"},
+    {AST_SND, "AST_SND"},
     {END_OF_AST_TYPE_LIST, NULL}
 };
 
@@ -146,7 +149,15 @@ static const char *astTypeName(AstType type)
 
 bool isUnaryOpAst(Ast *ast)
 {
-    return ast->type == AST_PRINT;
+    switch (ast->type) {
+    case AST_PRINT:
+    case AST_TO_STRING:
+    case AST_FST:
+    case AST_SND:
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool isBinaryOpAst(Ast *ast)

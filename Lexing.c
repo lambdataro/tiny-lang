@@ -45,6 +45,9 @@ static struct {
     {"print", TOKEN_KWD_PRINT},
     {"if",    TOKEN_KWD_IF},
     {"while", TOKEN_KWD_WHILE},
+    {"str",   TOKEN_KWD_STR},
+    {"fst",   TOKEN_KWD_FST},
+    {"snd",   TOKEN_KWD_SND},
     {NULL,    END_OF_TOKEN_TYPE_LIST}
 };
 

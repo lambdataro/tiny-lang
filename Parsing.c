@@ -19,6 +19,9 @@ static Ast *parseStmtBlock(LexingState *state);
 static Ast *parseWhile(LexingState *state);
 static Ast *parseIf(LexingState *state);
 static Ast *parseSimpleExprPair(LexingState *state);
+static Ast *parseSimpleExprToString(LexingState *state);
+static Ast *parseSimpleExprFst(LexingState *state);
+static Ast *parseSimpleExprSnd(LexingState *state);
 
 Ast *startParse(LexingState *state)
 {
@@ -213,6 +216,12 @@ static Ast *parseSimpleExpr(LexingState *state)
         return parseSimpleExprParens(state);
     case TOKEN_LEFT_BRACKET:
         return parseSimpleExprPair(state);
+    case TOKEN_KWD_STR:
+        return parseSimpleExprToString(state);
+    case TOKEN_KWD_FST:
+        return parseSimpleExprFst(state);
+    case TOKEN_KWD_SND:
+        return parseSimpleExprSnd(state);
     default:
         return createErrorAst("syntax error");
     }
@@ -271,4 +280,52 @@ static Ast *parseSimpleExprPair(LexingState *state)
     }
     nextToken(state);
     return createBinaryOpAst(AST_PAIR, fstExpr, sndExpr);
+}
+
+static Ast *parseSimpleExprToString(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *lhs = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(lhs);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    return createUnaryOpAst(AST_TO_STRING, lhs);
+}
+
+static Ast *parseSimpleExprFst(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *lhs = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(lhs);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    return createUnaryOpAst(AST_FST, lhs);
+}
+
+static Ast *parseSimpleExprSnd(LexingState *state)
+{
+    nextToken(state);
+    if (state->token->type != TOKEN_LEFT_PAREN) {
+        return createErrorAst("left paren required");
+    }
+    nextToken(state);
+    Ast *lhs = parseExpr(state);
+    if (state->token->type != TOKEN_RIGHT_PAREN) {
+        destroyAst(lhs);
+        return createErrorAst("unclosed expression");
+    }
+    nextToken(state);
+    return createUnaryOpAst(AST_SND, lhs);
 }
