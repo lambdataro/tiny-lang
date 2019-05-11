@@ -1,18 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "Stream.h"
+#include "Lexing.h"
 
 void outputHelloWorld(void);
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    printf("TinyLang\n");
-    fflush(stdout);
+    if (argc == 2) {
+        return EXIT_SUCCESS;
+    }
 
-    outputHelloWorld();
-    system("gcc -o prog build.c");
-    system("prog");
+    fprintf(stderr, "Usage: TinyLang [filename]\n");
+    return EXIT_FAILURE;
+}
 
-    return EXIT_SUCCESS;
+static void compileFile(const char *filename)
+{
+    Stream *stream = createFileStream(filename);
+    if (!stream) {
+        fprintf(stderr, "failed to open file: \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    LexingState *state = createLexingState(stream);
+
+    // TODO: 処理を追加
+
+    destroyLexingState(state);
+    destroyStream(stream);
 }
 
 void outputHelloWorld(void)
