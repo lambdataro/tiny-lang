@@ -2,12 +2,19 @@
 #include <stdlib.h>
 #include "Stream.h"
 #include "Lexing.h"
+#include "Parsing.h"
 
-void outputHelloWorld(void);
+static void compileFile(const char *filename);
 
 int main(int argc, char *argv[])
 {
     if (argc == 2) {
+        compileFile(argv[1]);
+        return EXIT_SUCCESS;
+    }
+
+    if (argc == 1) {
+        compileFile("..\\tests\\prog01.tl");
         return EXIT_SUCCESS;
     }
 
@@ -24,27 +31,9 @@ static void compileFile(const char *filename)
     }
 
     LexingState *state = createLexingState(stream);
-
-    // TODO: 処理を追加
-
+    Ast *ast = startParse(state);
+    fprintAst(stdout, ast, 0);
+    destroyAst(ast);
     destroyLexingState(state);
     destroyStream(stream);
-}
-
-void outputHelloWorld(void)
-{
-    FILE *file = fopen("build.c", "w");
-    if (!file) {
-        fprintf(stderr, "failed to create output file.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    fprintf(file,
-        "#include <stdio.h>\n"
-        "int main(void) {\n"
-        "  printf(\"hello, world.\\n\");\n"
-        "  return 0;\n"
-        "}\n");
-
-    fclose(file);
 }

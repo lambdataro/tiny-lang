@@ -20,3 +20,10 @@ char *allocAndCopyString(const char *srcStr)
     strcpy(str, srcStr);
     return str;
 }
+
+void fprintIndent(FILE *file, int indent)
+{
+    for (int i = 0; i < indent; i++) {
+        fprintf(file, "  ");
+    }
+}
