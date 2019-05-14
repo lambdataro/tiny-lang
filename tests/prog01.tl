@@ -1,3 +1,1 @@
-proc main() {
-  print(100)
-}
+print("hello")

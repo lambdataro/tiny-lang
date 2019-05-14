@@ -23,8 +23,6 @@ static struct {
 } symbolTokenTable[] = {
     {'(',  TOKEN_LEFT_PAREN},
     {')',  TOKEN_RIGHT_PAREN},
-    {'{',  TOKEN_LEFT_BRACE},
-    {'}',  TOKEN_RIGHT_BRACE},
     {'\0', END_OF_TOKEN_TYPE_LIST}
 };
 
@@ -32,7 +30,6 @@ static struct {
     const char *str;
     TokenType type;
 } keywordTable[] = {
-    {"proc",  TOKEN_KWD_PROC},
     {"print", TOKEN_KWD_PRINT},
     {NULL,    END_OF_TOKEN_TYPE_LIST}
 };

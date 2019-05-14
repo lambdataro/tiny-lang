@@ -9,9 +9,8 @@ static struct {
     const char *name;
 } astTypeNameTable[] = {
     {AST_ERROR,      "AST_ERROR"},
-    {AST_DEF_PROC,   "AST_DEF_PROC"},
     {AST_STMT_PRINT, "AST_STMT_PRINT"},
-    {AST_EXPR_INT,   "AST_EXPR_INT"},
+    {AST_EXPR_STR,   "AST_EXPR_STR"},
     {END_OF_AST_TYPE_LIST, NULL}
 };
 
@@ -39,7 +38,7 @@ void destroyAst(Ast *ast)
     if (ast->rhs) {
         free(ast->rhs);
     }
-    if (ast->type == AST_ERROR || ast->type == AST_DEF_PROC) {
+    if (ast->type == AST_ERROR || ast->type == AST_EXPR_STR) {
         free(ast->strVal);
     }
     free(ast);
@@ -54,20 +53,14 @@ void fprintAst(FILE *file, Ast *ast, int indent)
         return;
     }
 
-    if (ast->type == AST_DEF_PROC) {
-        fprintf(file, "AST_DEF_PROC(%s):\n", ast->strVal);
-        fprintAst(file, ast->lhs, indent+1);
-        return;
-    }
-
     if (ast->type == AST_STMT_PRINT) {
         fprintf(file, "AST_STMT_PRINT:\n");
         fprintAst(file, ast->lhs, indent+1);
         return;
     }
 
-    if (ast->type == AST_EXPR_INT) {
-        fprintf(file, "AST_INT(%d)", ast->intVal);
+    if (ast->type == AST_EXPR_STR) {
+        fprintf(file, "AST_INT(\"%s\")", ast->strVal);
         return;
     }
 

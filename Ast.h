@@ -5,14 +5,9 @@
 
 typedef enum {
     AST_ERROR,
-    // def
-        AST_DEF_PROC,
-    // stmt
-        AST_STMT_PRINT,
-    // expr
-        AST_EXPR_INT,
-    //
-        END_OF_AST_TYPE_LIST
+    AST_STMT_PRINT,
+    AST_EXPR_STR,
+    END_OF_AST_TYPE_LIST
 } AstType;
 
 typedef struct Ast {
