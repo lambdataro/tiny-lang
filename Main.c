@@ -3,6 +3,7 @@
 #include "Stream.h"
 #include "Lexing.h"
 #include "Parsing.h"
+#include "Compile.h"
 
 static void compileFile(const char *filename);
 
@@ -32,7 +33,21 @@ static void compileFile(const char *filename)
 
     LexingState *state = createLexingState(stream);
     Ast *ast = startParse(state);
-    fprintAst(stdout, ast, 0);
+
+    FILE *asmFile = fopen("build.asm", "w");
+    if (!asmFile) {
+        fprintf(stderr, "failed to create asm file\n");
+        exit(EXIT_FAILURE);
+    }
+    startCompile(asmFile, ast);
+    fclose(asmFile);
+
+    int result = system("fasm build.asm");
+    if (result) {
+        exit(EXIT_FAILURE);
+    }
+    system("build");
+
     destroyAst(ast);
     destroyLexingState(state);
     destroyStream(stream);
