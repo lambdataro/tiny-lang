@@ -18,3 +18,11 @@ char *allocAndCopyString(const char *srcStr)
     strcpy(str, srcStr);
     return str;
 }
+
+void runCommand(const char *command)
+{
+    int result = system(command);
+    if (result) {
+        exit(EXIT_FAILURE);
+    }
+}

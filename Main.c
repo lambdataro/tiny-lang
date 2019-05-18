@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Stream.h"
+#include "Compiler.h"
+#include "Util.h"
 
 static void compileFile(const char *filename);
 
@@ -23,4 +25,15 @@ static void compileFile(const char *filename)
         exit(EXIT_FAILURE);
     }
     destroyStream(stream);
+
+    FILE *outFile = fopen("build.asm", "w");
+    if (!outFile) {
+        fprintf(stderr, "failed to create output file '%s'\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    startCompile(outFile);
+    fclose(outFile);
+
+    runCommand("fasm build.asm");
+    runCommand("build.exe");
 }
