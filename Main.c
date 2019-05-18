@@ -4,11 +4,12 @@
 #include "Compiler.h"
 #include "Util.h"
 #include "Lexer.h"
+#include "Parser.h"
 
 static void compileFile(const char *filename);
 static Stream *openSourceFile(const char *filename);
 void closeSourceFile(Stream *stream);
-static void generateCode(void);
+static void generateCode(Ast *ast);
 static void runCode(void);
 
 int main(int argc, char *argv[])
@@ -25,10 +26,17 @@ int main(int argc, char *argv[])
 static void compileFile(const char *filename)
 {
     Stream *stream = openSourceFile(filename);
-    LexingState *lexingState = createLexingState(stream);
-    destroyLexingState(lexingState);
+    LexingState *state = createLexingState(stream);
+    Ast *ast = startParse(state);
+    destroyLexingState(state);
     closeSourceFile(stream);
-    generateCode();
+
+    fprintAst(stdout, ast, 0);
+    fprintf(stdout, "\n");
+
+    generateCode(ast);
+    destroyAst(ast);
+
     runCode();
 }
 
@@ -47,7 +55,7 @@ void closeSourceFile(Stream *stream)
     destroyStream(stream);
 }
 
-static void generateCode(void)
+static void generateCode(Ast *ast)
 {
     const char *filename = "build.asm";
     FILE *outFile = fopen(filename, "w");
@@ -55,7 +63,7 @@ static void generateCode(void)
         fprintf(stderr, "failed to create output file '%s'\n", filename);
         exit(EXIT_FAILURE);
     }
-    startCompile(outFile);
+    startCompile(outFile, ast);
     fclose(outFile);
 }
 

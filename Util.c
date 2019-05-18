@@ -26,3 +26,11 @@ void runCommand(const char *command)
         exit(EXIT_FAILURE);
     }
 }
+
+void fprintIndent(FILE *file, int indent)
+{
+    for (int i = 0; i < indent; i++) {
+        fprintf(file, "  ");
+    }
+}
+
